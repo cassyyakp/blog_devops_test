@@ -18,9 +18,9 @@ services:
   
   backend:
     build:
-      context: ./backend
+      context: ./back
       dockerfile: Dockerfile
-    container_name: blog_backend
+    container_name: blog_back
     depends_on:
       - db
     environment:
@@ -34,20 +34,18 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - ./backend:/var/www/html
+      - ./back:/var/www/html
 
   
   frontend:
     build:
-      context: ./frontend
+      context: ./front
       dockerfile: Dockerfile
-    container_name: blog_frontend
+    container_name: blog_front
     depends_on:
       - backend
     ports:
       - "5173:5173"
-    volumes:
-      - ./frontend:/app
 
 volumes:
   pgdata:
