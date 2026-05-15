@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+
+ 
+  db:
+    image: postgres:15-alpine
+    container_name: blog_db
+    environment:
+      POSTGRES_DB: blog
+      POSTGRES_USER: blog_user
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: blog_backend
+    depends_on:
+      - db
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: blog
+      DB_USERNAME: blog_user
+      DB_PASSWORD: secret
+      APP_KEY: base64:CHANGE_ME
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./backend:/var/www/html
+
+  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: blog_frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+
+volumes:
+  pgdata:
