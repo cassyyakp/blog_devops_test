@@ -1,0 +1,69 @@
+name: CI/CD Blog
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  backend:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: blog
+          POSTGRES_USER: blog_user
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_pgsql, mbstring, zip, gd
+
+      - name: Copier le .env
+        run: cp back/.env.example back/.env
+
+      - name: Installer les dépendances Laravel
+        run: cd back && composer install
+
+      - name: Générer la clé Laravel
+        run: cd back && php artisan key:generate
+
+      - name: Lancer les migrations
+        run: cd back && php artisan migrate --force
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_DATABASE: blog
+          DB_USERNAME: blog_user
+          DB_PASSWORD: secret
+
+      - name: Lancer les tests
+        run: cd back && php artisan test
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Installer les dépendances React
+        run: cd front && npm install
+
+      - name: Builder le frontend
+        run: cd front && npm run build
